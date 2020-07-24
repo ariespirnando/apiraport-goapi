@@ -63,7 +63,7 @@ func Getraportdetail(c *gin.Context) {
 				log.Fatal(err.Error())
 			} else { 
 				var datapelajaran []model.Pelajaran 
-				config.DB.LogMode(true)
+				//config.DB.LogMode(true)
 				config.DB.Table("tb_jurusanxpelajaran").
 					Select("tb_jurusanxpelajaran.kodepelajaran, tbl_pengaturanpelajaran.namapelajaran, tbl_pengaturanpelajaran.kkm,(SELECT t.nilai FROM tbl_raportdetail t WHERE t.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t.kodenilai ='N' AND t.guidraport= ? ) as 'pengetahuan', (SELECT t1.nilai FROM tbl_raportdetail t1 WHERE t1.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t1.kodenilai ='P' AND t1.guidraport= ? ) as 'keterampilan', (SELECT t2.nilai FROM tbl_raportdetail t2 WHERE t2.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t2.kodenilai ='S' AND t2.guidraport= ? ) as 'sikap', IF((SELECT t3.nilai FROM tbl_raportdetail t3 WHERE t3.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t3.kodenilai ='NK' AND t3.guidraport = ? ) = 'Tuntas', 'T','TT') as 'keterangan'", json.Guidraport,json.Guidraport,json.Guidraport,json.Guidraport).
 					Joins("INNER JOIN tbl_pengaturanpelajaran ON tbl_pengaturanpelajaran.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran").
