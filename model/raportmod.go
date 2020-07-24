@@ -21,12 +21,10 @@ type Pelajaran struct {
 	Kodepelajaran string  `json:"kodepelajaran"`
 	Namapelajaran string  `json:"namapelajaran"`
 	Kkm           string  `json:"kkm"`
-	Nilai         []Nilai `json:"nilai,omitempty"`
-}
-
-type Nilai struct {
 	Pengetahuan  string `json:"pengetahuan"`
 	Keterampilan string `json:"keterampilan"`
 	Sikap        string `json:"sikap"`
-	Keterangan   string `json:"keterangan"`
+	Keterangan   string `json:"keterangan"` 
 }
+
+ 

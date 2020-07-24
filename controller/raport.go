@@ -61,32 +61,41 @@ func Getraportdetail(c *gin.Context) {
 			if err := rows.Scan(&kelompok.Kodekelompok, &kelompok.Namakelompok); err != nil {
 				count++
 				log.Fatal(err.Error())
-			} else {
-				var pelajaran model.Pelajaran
-				var datapelajaran []model.Pelajaran
-				rows1, _ := config.DB.Table("tb_jurusanxpelajaran").
-					Select("tb_jurusanxpelajaran.kodepelajaran, tbl_pengaturanpelajaran.namapelajaran, tbl_pengaturanpelajaran.kkm").
+			} else { 
+				var datapelajaran []model.Pelajaran 
+				config.DB.LogMode(true)
+				config.DB.Table("tb_jurusanxpelajaran").
+					Select("tb_jurusanxpelajaran.kodepelajaran, tbl_pengaturanpelajaran.namapelajaran, tbl_pengaturanpelajaran.kkm,(SELECT t.nilai FROM tbl_raportdetail t WHERE t.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t.kodenilai ='N' AND t.guidraport= ? ) as 'pengetahuan', (SELECT t1.nilai FROM tbl_raportdetail t1 WHERE t1.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t1.kodenilai ='P' AND t1.guidraport= ? ) as 'keterampilan', (SELECT t2.nilai FROM tbl_raportdetail t2 WHERE t2.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t2.kodenilai ='S' AND t2.guidraport= ? ) as 'sikap', IF((SELECT t3.nilai FROM tbl_raportdetail t3 WHERE t3.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t3.kodenilai ='NK' AND t3.guidraport = ? ) = 'Tuntas', 'T','TT') as 'keterangan'", json.Guidraport,json.Guidraport,json.Guidraport,json.Guidraport).
 					Joins("INNER JOIN tbl_pengaturanpelajaran ON tbl_pengaturanpelajaran.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran").
-					Where("tb_jurusanxpelajaran.kodekelas = ? AND tb_jurusanxpelajaran.Kodejuruan = ? AND tb_jurusanxpelajaran.kodekelompok = ?", json.Kodekelas, json.Kodejuruan, kelompok.Kodekelompok).
-					Order("tb_jurusanxpelajaran.iurutan asc").
-					Rows()
-				for rows1.Next() {
-					if err1 := rows1.Scan(&pelajaran.Kodepelajaran, &pelajaran.Namapelajaran, &pelajaran.Kkm); err1 != nil {
-						count++
-						log.Fatal(err1.Error())
-					} else {
-						var nilai []model.Nilai
-						config.DB.Table("tbl_raportdetail").
-							Select("(SELECT t.nilai FROM tbl_raportdetail t WHERE t.kodepelajaran = ? AND t.kodenilai ='N' AND t.guidraport=?) as 'pengetahuan',(SELECT t1.nilai FROM tbl_raportdetail t1 WHERE t1.kodepelajaran = ? AND t1.kodenilai ='P' AND t1.guidraport=?) as 'keterampilan',(SELECT t2.nilai FROM tbl_raportdetail t2 WHERE t2.kodepelajaran = ? AND t2.kodenilai ='S' AND t2.guidraport=?) as 'sikap',IF((SELECT t3.nilai FROM tbl_raportdetail t3 WHERE t3.kodepelajaran = ? AND t3.kodenilai ='NK' AND t3.guidraport = ?) = 'Tuntas', 'T','TT') as 'keterangan'", pelajaran.Kodepelajaran, json.Guidraport, pelajaran.Kodepelajaran, json.Guidraport, pelajaran.Kodepelajaran, json.Guidraport, pelajaran.Kodepelajaran, json.Guidraport).
-							Where("guidraport=? AND kodepelajaran = ?", json.Guidraport, pelajaran.Kodepelajaran).
-							Limit(1).
-							Scan(&nilai)
-						pelajaran.Nilai = nilai
-						datapelajaran = append(datapelajaran, pelajaran)
-					}
-				}
+					Where("tb_jurusanxpelajaran.kodekelas = ? AND  tb_jurusanxpelajaran.kodekelompok = ? AND tb_jurusanxpelajaran.Kodejuruan = ?", json.Kodekelas, kelompok.Kodekelompok,json.Kodejuruan). 
+					Scan(&datapelajaran)
 				kelompok.Pelajaran = datapelajaran
 				datakelompok = append(datakelompok, kelompok)
+				// config.DB.Raw("CALL `getraportdetail`('X', 'KELA', '5ef02923c6d4626', 'IPS')", json.Kodekelas, kelompok.Kodekelompok, json.Guidraport, json.Kodejuruan).Scan(&products)
+				// 
+				// rows1, _ := config.DB.Table("tb_jurusanxpelajaran").
+				// 	Select("tb_jurusanxpelajaran.kodepelajaran, tbl_pengaturanpelajaran.namapelajaran, tbl_pengaturanpelajaran.kkm").
+				// 	Joins("INNER JOIN tbl_pengaturanpelajaran ON tbl_pengaturanpelajaran.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran").
+				// 	Where("tb_jurusanxpelajaran.kodekelas = ? AND tb_jurusanxpelajaran.Kodejuruan = ? AND tb_jurusanxpelajaran.kodekelompok = ?", json.Kodekelas, json.Kodejuruan, kelompok.Kodekelompok).
+				// 	Order("tb_jurusanxpelajaran.iurutan asc").
+				// 	Rows()
+				// for rows1.Next() {
+				// 	if err1 := rows1.Scan(&pelajaran.Kodepelajaran, &pelajaran.Namapelajaran, &pelajaran.Kkm); err1 != nil {
+				// 		count++
+				// 		log.Fatal(err1.Error())
+				// 	} else {
+				// 		var nilai []model.Nilai
+				// 		config.DB.Table("tbl_raportdetail").
+				// 			Select("(SELECT t.nilai FROM tbl_raportdetail t WHERE t.kodepelajaran = ? AND t.kodenilai ='N' AND t.guidraport=?) as 'pengetahuan',(SELECT t1.nilai FROM tbl_raportdetail t1 WHERE t1.kodepelajaran = ? AND t1.kodenilai ='P' AND t1.guidraport=?) as 'keterampilan',(SELECT t2.nilai FROM tbl_raportdetail t2 WHERE t2.kodepelajaran = ? AND t2.kodenilai ='S' AND t2.guidraport=?) as 'sikap',IF((SELECT t3.nilai FROM tbl_raportdetail t3 WHERE t3.kodepelajaran = ? AND t3.kodenilai ='NK' AND t3.guidraport = ?) = 'Tuntas', 'T','TT') as 'keterangan'", pelajaran.Kodepelajaran, json.Guidraport, pelajaran.Kodepelajaran, json.Guidraport, pelajaran.Kodepelajaran, json.Guidraport, pelajaran.Kodepelajaran, json.Guidraport).
+				// 			Where("guidraport=? AND kodepelajaran = ?", json.Guidraport, pelajaran.Kodepelajaran).
+				// 			Limit(1).
+				// 			Scan(&nilai)
+				// 		pelajaran.Nilai = nilai
+				// 		datapelajaran = append(datapelajaran, pelajaran)
+				// 	}
+				// }
+				// kelompok.Pelajaran = datapelajaran
+				// 
 			}
 		}
 
@@ -106,3 +115,16 @@ func Getraportdetail(c *gin.Context) {
 	}
 
 }
+
+
+
+// SELECT tb_jurusanxpelajaran.kodepelajaran, 
+// 		 tbl_pengaturanpelajaran.namapelajaran, 
+// 		 tbl_pengaturanpelajaran.kkm,
+// 		 (SELECT t.nilai FROM tbl_raportdetail t WHERE t.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t.kodenilai ='N' AND t.guidraport=?) as 'pengetahuan',
+// 		 (SELECT t1.nilai FROM tbl_raportdetail t1 WHERE t1.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t1.kodenilai ='P' AND t1.guidraport=?) as 'keterampilan',
+// 		 (SELECT t2.nilai FROM tbl_raportdetail t2 WHERE t2.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t2.kodenilai ='S' AND t2.guidraport=?) as 'sikap',
+// 		 IF((SELECT t3.nilai FROM tbl_raportdetail t3 WHERE t3.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran AND t3.kodenilai ='NK' AND t3.guidraport = ?) = 'Tuntas', 'T','TT') as 'keterangan'
+// FROM tb_jurusanxpelajaran INNER JOIN tbl_pengaturanpelajaran ON tbl_pengaturanpelajaran.kodepelajaran = tb_jurusanxpelajaran.kodepelajaran
+// WHERE tb_jurusanxpelajaran.kodekelas = "X" AND tb_jurusanxpelajaran.Kodejuruan = "IPS" AND tb_jurusanxpelajaran.kodekelompok = "KELA"
+ 
